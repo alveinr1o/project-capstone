@@ -65,4 +65,8 @@ urlpatterns = [
     path('api/profil-mahasiswa/', views.get_profil_mahasiswa, name='mahasiswa_list_api'),
     path('api/profil-pembimbing/', views.ProfilPembimbingAPI.as_view(), name='profil_pembimbing'),
     path("api/mahasiswa-detail-page/<str:nim>/", views.mahasiswa_detail_view),
+
+    path('api/admin-dashboard/', views.AdminDashboardAPIView.as_view(), name='admin_dashboard_api'),
+    path('api/mahasiswa/<str:nim>/', views.MahasiswaDetailAPIView.as_view(), name='mahasiswa_detail_api'),
+    path("api/mahasiswa/<str:nim>/bimbingan/<int:bimbingan_id>/", views.BimbinganDetailMahasiswa.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

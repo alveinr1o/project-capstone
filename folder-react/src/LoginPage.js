@@ -24,8 +24,6 @@ function LoginPage() {
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
         localStorage.setItem("user_type", data.user_type);
-
-        console.log("Login berhasil:", data);
   
         // Redirect sesuai role
         if (data.user_type === "1") {

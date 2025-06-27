@@ -1453,3 +1453,175 @@ def mahasiswa_detail_view(request, nim):
         ]
     }
     return Response(data)
+
+class AdminDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        nama_query = request.GET.get('nama')
+        milestone_query = request.GET.get('milestone')
+        deadline_query = request.GET.get('deadline')
+        dosen_query = request.GET.get('dosen')
+        tahun_masuk_query = request.GET.get('tahun_masuk', '').strip()
+
+        ALL_MILESTONES = [m[0] for m in Milestone.STATUS_CHOICES]
+        distribusi_milestone = Counter()
+        status_counter = {
+            'ahead of schedule': 0,
+            'on ideal schedule': 0,
+            'behind the schedule': 0,
+        }
+
+        mahasiswa_milestones = []
+        daftar_mahasiswa = []
+
+        for mhs in Mhs.objects.all():
+            penelitian = mhs.penelitian_set.first()
+            if not penelitian:
+                continue
+
+            milestones = list(penelitian.milestone_set.order_by('id'))
+            if not milestones:
+                continue
+
+            milestone_disetujui = None
+            for m in reversed(milestones):
+                if m.is_approved in ['disetujui', 'approved']:
+                    milestone_disetujui = m
+                    break
+
+            milestone_aktif = None
+            if milestone_disetujui:
+                idx = milestones.index(milestone_disetujui)
+                if idx + 1 < len(milestones):
+                    milestone_aktif = milestones[idx + 1]
+            else:
+                milestone_aktif = milestones[0]
+
+            if milestone_aktif:
+                if nama_query and nama_query.lower() not in mhs.nama_Mhs.lower():
+                    continue
+
+                if milestone_query and milestone_aktif.jenis_milestone != milestone_query:
+                    continue
+
+                if deadline_query and str(milestone_aktif.deadline)[:10] != deadline_query:
+                    continue
+
+                if dosen_query and not penelitian.nip.filter(nama_Dosen__icontains=dosen_query).exists():
+                    continue
+
+                if tahun_masuk_query and str(mhs.tahun_masuk) != tahun_masuk_query:
+                    continue
+
+                mahasiswa_milestones.append({
+                    'nama': mhs.nama_Mhs,
+                    'nim': mhs.nim,
+                    'judul': penelitian.judul,
+                    'tahun_masuk': mhs.tahun_masuk,
+                    'milestone': {
+                        'jenis_milestone': milestone_aktif.jenis_milestone,
+                        'deadline': milestone_aktif.deadline,
+                        'status': milestone_aktif.status,
+                        'status_persetujuan': milestone_aktif.is_approved,
+                    }
+                })
+
+                distribusi_milestone[milestone_aktif.jenis_milestone] += 1
+                if milestone_aktif.status in status_counter:
+                    status_counter[milestone_aktif.status] += 1
+                else:
+                    status_counter['ahead of schedule'] += 1
+            else:
+                distribusi_milestone["Semua milestone selesai"] += 1
+
+            daftar_mahasiswa.append({
+                'nama': mhs.nama_Mhs,
+                'nim':mhs.nim,
+                'judul': penelitian.judul,
+                'tahap': milestone_disetujui.jenis_milestone if milestone_disetujui else 'Belum Ada'
+            })
+
+        distribusi_milestone_list = [
+            {'jenis_milestone': milestone, 'jumlah': distribusi_milestone.get(milestone, 0)}
+            for milestone in ALL_MILESTONES
+        ]
+
+        total_mahasiswa = (
+            status_counter['ahead of schedule'] +
+            status_counter['on ideal schedule'] +
+            status_counter['behind the schedule']
+        )
+
+        tahun_list = list(Mhs.objects.values_list('tahun_masuk', flat=True).distinct().order_by('-tahun_masuk'))
+
+        return Response({
+            'total_mahasiswa': total_mahasiswa,
+            'mahasiswa_ahead': status_counter['ahead of schedule'],
+            'mahasiswa_ideal': status_counter['on ideal schedule'],
+            'mahasiswa_behind': status_counter['behind the schedule'],
+            'tahap_grafik': distribusi_milestone_list,
+            'daftar_mahasiswa': daftar_mahasiswa,
+            'mahasiswa_milestones': mahasiswa_milestones,
+            'milestone_choices': ALL_MILESTONES,
+            'dosen_list': list(Pembimbing.objects.values('id', 'nama_Dosen')),
+            'tahun_list': tahun_list,
+        })
+    
+class MahasiswaDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, nim):
+        mhs = get_object_or_404(Mhs, nim=nim)
+        penelitian = mhs.penelitian_set.first()
+        bimbingan_list = Bimbingan.objects.filter(penelitian_id=penelitian).order_by('-tanggal_mulai')
+
+        data = {
+            'nama': mhs.nama_Mhs,
+            'nim': mhs.nim,
+            'judul': penelitian.judul if penelitian else "",
+            'topik': penelitian.judul if penelitian else "",
+            'tahun_masuk': mhs.tahun_masuk,
+            'foto_profil': mhs.foto_profil.url if mhs.foto_profil else None,
+            'bimbingan': [
+                {
+                    'id':b.id,
+                    'judul': b.nama,
+                    'deskripsi': b.deskripsi_kegiatan,
+                    'tanggal': b.tanggal_mulai.strftime('%d %B %Y'),
+                    'status':b.status,
+                    'file': b.file.url if b.file else None,
+                    'komentar':b.komentar,
+                } for b in bimbingan_list
+            ]
+        }
+        return Response(data)
+    
+class BimbinganDetailMahasiswa(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, nim, bimbingan_id):
+        try:
+            mhs = Mhs.objects.get(nim=nim)
+            penelitian = Penelitian.objects.get(nim=mhs)
+            bimbingan = Bimbingan.objects.get(id=bimbingan_id, penelitian_id=penelitian)
+
+            return Response({
+                'id': bimbingan.id,
+                'nama': bimbingan.nama,
+                'deskripsi_kegiatan': bimbingan.deskripsi_kegiatan,
+                'tipe': bimbingan.tipe_penyelenggaraan,
+                'tanggal_mulai': bimbingan.tanggal_mulai,
+                'tanggal_selesai': bimbingan.tanggal_selesai,
+                'komentar': bimbingan.komentar,
+                'status': bimbingan.status,
+                'file': bimbingan.file.url if bimbingan.file else None,
+                'link': bimbingan.link,
+            })
+
+        except Mhs.DoesNotExist:
+            return Response({'error': 'Mahasiswa tidak ditemukan'}, status=404)
+        except Penelitian.DoesNotExist:
+            return Response({'error': 'Penelitian tidak ditemukan'}, status=404)
+        except Bimbingan.DoesNotExist:
+            return Response({'error': 'Bimbingan tidak ditemukan'}, status=404)

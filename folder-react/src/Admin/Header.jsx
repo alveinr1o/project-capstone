@@ -5,7 +5,7 @@ import {
   FaRegComments,
   FaRegBell,
 } from "react-icons/fa";
-import profilePic from "../assets/profile.jpg";
+import profilePic from "../assets/daun_sakit_5hLGiSD.png";
 
 function HeaderIcon({ icon, active }) {
   const [hover, setHover] = useState(false);
@@ -36,9 +36,6 @@ function Header() {
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
     const storedNip = localStorage.getItem("nip");
-
-    console.log("Username:", storedUsername);
-    console.log("NIP:", storedNip);
 
     setUser({
       name: storedUsername ?? "",

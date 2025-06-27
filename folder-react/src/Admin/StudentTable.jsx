@@ -163,16 +163,40 @@ const StudentTable = () => {
               <tr style={styles.filterInputRow}>
                 <td></td>
                 <td style={styles.filterInputCell}>
-                  <input style={styles.input} value={filters.tahunMasuk} onChange={(e) => handleFilterChange("tahunMasuk", e.target.value)} placeholder="Cari Nama" />
+                  <input
+                    style={styles.input}
+                    value={filters.tahunMasuk}
+                    onChange={(e) =>
+                      handleFilterChange("tahunMasuk", e.target.value)
+                    }
+                    placeholder="Cari Nama"
+                  />
                 </td>
                 <td style={styles.filterInputCell}>
-                  <input style={styles.input} value={filters.name} onChange={(e) => handleFilterChange("name", e.target.value)} placeholder="Cari Nama" />
+                  <input
+                    style={styles.input}
+                    value={filters.name}
+                    onChange={(e) => handleFilterChange("name", e.target.value)}
+                    placeholder="Cari Nama"
+                  />
                 </td>
                 <td style={styles.filterInputCell}>
-                  <input style={styles.input} value={filters.nim} onChange={(e) => handleFilterChange("nim", e.target.value)} placeholder="Cari NIM" />
+                  <input
+                    style={styles.input}
+                    value={filters.nim}
+                    onChange={(e) => handleFilterChange("nim", e.target.value)}
+                    placeholder="Cari NIM"
+                  />
                 </td>
                 <td style={styles.filterInputCell}>
-                  <input style={styles.input} value={filters.topic} onChange={(e) => handleFilterChange("topic", e.target.value)} placeholder="Cari Topik" />
+                  <input
+                    style={styles.input}
+                    value={filters.topic}
+                    onChange={(e) =>
+                      handleFilterChange("topic", e.target.value)
+                    }
+                    placeholder="Cari Topik"
+                  />
                 </td>
                 <td></td>
                 <td></td>
@@ -180,21 +204,31 @@ const StudentTable = () => {
             </thead>
             <tbody>
               {paginatedData.map((item, index) => (
-                <tr key={index} style={{ backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff" }}>
+                <tr
+                  key={index}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
+                  }}
+                >
                   <td style={styles.tableCell}>{item.no}</td>
                   <td style={styles.tableCell}>{item.tahun_masuk}</td>
                   <td style={styles.tableCell}>
                     <button
-                      style={{ 
-                        background: 'none',
-                        border: 'none',
-                        color: '#4d44b5',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#4d44b5",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        textDecoration: "underline",
                         padding: 0,
                       }}
-                      onClick={() => navigate(`/student-detail/${item.nim}`, { state: { student: item } })}
+                      onClick={() =>
+                        navigate( 
+                          `/student-detail/${item.nim}`,
+                          { state: { student: item } }
+                        )
+                      }
                     >
                       {item.name}
                     </button>
@@ -223,14 +257,14 @@ const StudentTable = () => {
               ))}
             </tbody>
           </table>
-          <div style={{ ...styles.bottomBar, color: '#525f7f' }}>
+          <div style={{ ...styles.bottomBar, color: "#525f7f" }}>
             <span>
-              Menampilkan {startIndex + 1} sampai{' '}
-              {endIndex > filteredData.length ? filteredData.length : endIndex} dari{' '}
-              {filteredData.length} entri
+              Menampilkan {startIndex + 1} sampai{" "}
+              {endIndex > filteredData.length ? filteredData.length : endIndex}{" "}
+              dari {filteredData.length} entri
             </span>
 
-            <div style={{ ...styles.pagination, color: '#525f7f' }}>
+            <div style={{ ...styles.pagination, color: "#525f7f" }}>
               {renderPagination()}
             </div>
           </div>
