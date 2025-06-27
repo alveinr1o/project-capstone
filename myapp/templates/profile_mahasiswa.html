@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil Mahasiswa</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+  <h1 class="mb-4">Profil Mahasiswa</h1>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">{{ mahasiswa.nama_Mhs }}</h5>
+      <p><strong>NIM:</strong> {{ mahasiswa.nim }}</p>
+      <p><strong>Email:</strong> {{ mahasiswa.admin.email }}</p>
+      {% if penelitian %}
+        <p><strong>Judul Penelitian:</strong> {{ penelitian.judul }}</p>
+
+        <p><strong>Pembimbing:</strong></p>
+        <ul>
+          {% for pembimbing in penelitian.nip.all %}
+            <li>{{ pembimbing.nama_Dosen }} ({{ pembimbing.nip }})</li>
+          {% empty %}
+            <li class="text-muted">Belum ada pembimbing terdaftar.</li>
+          {% endfor %}
+        </ul>
+
+      {% else %}
+        <p class="text-danger">Belum memiliki data penelitian.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Laporan Tahap Penelitian</div>
+    <div class="card-body">
+      {% if tahap_terakhir %}
+        <p><strong>✔️ Tahap Terakhir Disetujui:</strong> {{ tahap_terakhir.jenis_milestone|capfirst }} ({{ tahap_terakhir.updated_at|date:"d M Y" }})</p>
+      {% else %}
+        <p class="text-muted">Belum ada tahap yang disetujui.</p>
+      {% endif %}
+
+      {% if tahap_aktif %}
+        <p><strong>🚧 Saat Ini Mengajukan Tahap:</strong> {{ tahap_aktif.jenis_milestone|capfirst }}</p>
+        <p><strong>Status:</strong>
+          {% if tahap_aktif.is_approved == "pending" %}
+            <span class="badge bg-warning text-dark">Menunggu Persetujuan</span>
+          {% elif tahap_aktif.is_approved == "belum upload" %}
+            <span class="badge bg-secondary">Belum Upload Bukti</span>
+          {% elif tahap_aktif.is_approved == "ditolak" %}
+            <span class="badge bg-danger">Ditolak - Perlu Diperbaiki</span>
+          {% endif %}
+        </p>
+      {% else %}
+        <p class="text-success">🎉 Semua tahap sudah disetujui.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</body>
+</html>

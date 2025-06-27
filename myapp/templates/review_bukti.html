@@ -1,0 +1,13 @@
+<h3>Review Bukti Mahasiswa</h3>
+<ul>
+  {% for m in milestones %}
+    <li>
+      <strong>{{ m.penelitian_id.nim.nama_Mhs }}</strong> - {{ m.jenis_milestone }}<br>
+      File: <a href="{{ m.bukti_file.url }}">Lihat</a><br>
+      <a href="{% url 'proses_approval' m.id 'setujui' %}">Setujui</a> |
+      <a href="{% url 'proses_approval' m.id 'tolak' %}">Tolak</a>
+    </li>
+  {% empty %}
+    <li>Tidak ada bukti yang menunggu persetujuan</li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,47 @@
+
+@login_required 
+def upload_bukti_milestone(request, milestone_id):
+    milestone = get_object_or_404(Milestone, id=milestone_id)  # Pastikan milestone selalu ada
+
+    if request.method == 'POST':
+        form = BuktiMilestoneForm(request.POST, request.FILES, instance=milestone)
+        
+        # DEBUG: Cek isi FILES dan cleaned_data
+        print("📂 request.FILES:", request.FILES)
+        if form.is_valid():
+            print("✅ Form Valid")
+            print("📥 bukti_file in cleaned_data:", form.cleaned_data.get('bukti_file'))
+
+            milestone = form.save(commit=False)
+            milestone.tanggal_upload = timezone.now()
+            milestone.is_approved = 'pending'
+            milestone.save()
+
+            return redirect('mahasiswa_dashboard')
+        else:
+            print("❌ Form Invalid")
+            print(form.errors)
+
+    else:
+        form = BuktiMilestoneForm(instance=milestone)
+
+    return render(request, 'upload_bukti.html', {
+        'form': form,
+        'milestone': milestone
+    })
+
+
+def review_milestone(request, milestone_id):
+    milestone = get_object_or_404(milestone, id=milestone_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'approve':
+            milestone.is_approved = 'disetujui'
+            milestone.tanggal_disetujui = timezone.now()
+        elif action == 'reject':
+            milestone.is_approved = 'ditolak'
+        milestone.save()
+        return redirect('dashboard_pembimbing')
+
+    return render(request, 'pembimbing/review_milestone.html', {'milestone': milestone})

@@ -1,0 +1,230 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dosen Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">Dashboard Pengajuan Bimbingan Mahasiswa</h2>
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+      <div style="flex: 1; background-color: #1E40AF; color: white; padding: 1rem; border-radius: 0.5rem;">
+        <h3 style="margin: 0;">👤 {{ total_mahasiswa }}</h3>
+        <p style="margin: 0;">Mahasiswa Aktif</p>
+      </div>
+      <div style="flex: 1; background-color: #16A34A; color: white; padding: 1rem; border-radius: 0.5rem;">
+        <h3 style="margin: 0;">✅ {{ ahead_count }}</h3>
+        <p style="margin: 0;">Mahasiswa</p>
+      </div>
+      <div style="flex: 1; background-color: #FACC15; color: black; padding: 1rem; border-radius: 0.5rem;">
+        <h3 style="margin: 0;">⚠️ {{ ideal_count }}</h3>
+        <p style="margin: 0;">Mahasiswa</p>
+      </div>
+      <div style="flex: 1; background-color: #DC2626; color: white; padding: 1rem; border-radius: 0.5rem;">
+        <h3 style="margin: 0;">❌ {{ behind_count }}</h3>
+        <p style="margin: 0;">Mahasiswa</p>
+      </div>
+    </div>
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>No</th>
+          <th>Tahun Semester</th>
+          <th>Nama Mahasiswa</th>
+          <th>NIM Mahasiswa</th>
+          <th>Topik Tugas Akhir Mahasiswa</th>
+          <th>Status Progres</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bimbingan in bimbingan_list %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ bimbingan.tahun_semester }}</td>
+          <td>{{ bimbingan.penelitian_id.nim.nama_Mhs }}</td>
+          <td>{{ bimbingan.penelitian_id.nim.nim }}</td>
+          <td>{{ bimbingan.penelitian_id.judul }}</td>
+          <td>{{ bimbingan.status_progress }}</td>
+          <td>
+            <!-- Tombol View -->
+            <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewModal{{ bimbingan.id }}">
+              View
+            </button>
+    
+            {% if bimbingan.status == "sedang diperiksa" %}
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#acceptModal{{ bimbingan.id }}">
+              Accept
+            </button>
+            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ bimbingan.id }}">
+              Reject
+            </button>
+            {% endif %}
+    
+            <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#logModal{{ bimbingan.id }}">
+              &#9776;
+            </button>
+          </td>
+        </tr>
+    
+        <!-- Semua modal per bimbingan juga tetap berada di dalam loop -->
+        <!-- Modal View -->
+        <div class="modal fade" id="viewModal{{ bimbingan.id }}" tabindex="-1" aria-labelledby="viewModalLabel{{ bimbingan.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Detail Bimbingan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+              </div>
+              <div class="modal-body">
+                <p><strong>Nama Mahasiswa:</strong> {{ bimbingan.penelitian_id.nim.nama_Mhs }}</p>
+                <p><strong>Topik:</strong> {{ bimbingan.penelitian_id.judul }}</p>
+                <p><strong>Deskripsi Kegiatan:</strong> {{ bimbingan.deskripsi_kegiatan }}</p>
+                <p><strong>Tanggal:</strong> {{ bimbingan.tanggal_mulai }} s.d {{ bimbingan.tanggal_selesai }}</p>
+                <p><strong>Komentar:</strong> {{ bimbingan.komentar }}</p>
+                <p><strong>Dokumen:</strong> <a href="{{ bimbingan.file.url }}" target="_blank">{{ bimbingan.nama_dokumen }}</a></p>
+                <p><strong>Link Eksternal:</strong> <a href="{{ bimbingan.link }}" target="_blank">{{ bimbingan.link }}</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Accept -->
+        <div class="modal fade" id="acceptModal{{ bimbingan.id }}" tabindex="-1" aria-labelledby="acceptModalLabel{{ bimbingan.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" action="{% url 'approve_bimbingan' bimbingan.id %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Persetujuan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                <p>Apakah Anda yakin ingin menyetujui kegiatan ini?</p>
+                </div>
+                <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Setujui</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+
+        <!-- Modal Reject -->
+        <div class="modal fade" id="rejectModal{{ bimbingan.id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ bimbingan.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <form method="post" action="{% url 'reject_bimbingan' bimbingan.id %}">
+              {% csrf_token %}
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Alasan Penolakan</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label for="alasan">Masukkan alasan penolakan:</label>
+                    <textarea name="alasan" class="form-control" required></textarea>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-danger">Tolak</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h4 class="mt-5">Persetujuan Bukti Milestone</h4>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama Mahasiswa</th>
+          <th>Tahap Milestone</th>
+          <th>Bukti</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for milestone in pending_milestones %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ milestone.penelitian_id.nim.nama_Mhs }}</td>
+            <td>{{ milestone.get_jenis_milestone_display }}</td>
+            <td>
+              {% if milestone.bukti_file %}
+                <a href="{{ milestone.bukti_file.url }}" download>Download Bukti</a>
+              {% else %}
+                Tidak ada file
+              {% endif %}
+            </td>
+            <td>
+              {% if milestone.is_approved == 'pending' %}
+                <a href="{% url 'approve_milestone' milestone.id %}" class="btn btn-success btn-sm">Accept</a>
+                <a href="{% url 'decline_milestone' milestone.id %}" class="btn btn-danger btn-sm">Decline</a>
+              {% else %}
+                {{ milestone.get_is_approved_display }}
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">Tidak ada bukti milestone yang menunggu persetujuan.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+
+{% for bimbingan in bimbingan_list %}
+<!-- Modal Log Deadline -->
+<div class="modal fade" id="logModal{{ bimbingan.id }}" tabindex="-1" aria-labelledby="logModalLabel{{ bimbingan.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Log Perubahan Deadline</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        {% if bimbingan.deadline_logs %}
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Waktu Perubahan</th>
+                <th>Jenis Milestone</th>
+                <th>Deadline Lama</th>
+                <th>Deadline Baru</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in bimbingan.deadline_logs %}
+              <tr>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.milestone.get_jenis_milestone_display }}</td>
+                <td>{{ log.old_deadline }}</td>
+                <td>{{ log.new_deadline }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>Tidak ada perubahan deadline yang tercatat.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
